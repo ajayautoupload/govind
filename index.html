@@ -1,0 +1,2282 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AI Video Repurposer — Demo</title>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        --bg: #070b14;
+        --sidebar: #0b101b;
+        --card: #101722;
+        --card-2: #141c29;
+        --border: rgba(255,255,255,.08);
+        --text: #f4f7fb;
+        --muted: #8b95a7;
+        --primary: #7c5cff;
+        --primary-2: #9b7cff;
+        --success: #31d68b;
+        --warning: #ffb84d;
+        --danger: #ff5c73;
+        --blue: #4d9fff;
+        --shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 75% 0%, rgba(124,92,255,.10), transparent 25%),
+            var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+    }
+
+    button,
+    input,
+    select {
+        font: inherit;
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    /* =========================
+       APP LAYOUT
+    ========================= */
+
+    .app {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 255px;
+        background: rgba(11,16,27,.94);
+        border-right: 1px solid var(--border);
+        padding: 20px 14px;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 100;
+        transition: .3s ease;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 4px 10px 28px;
+    }
+
+    .logo-icon {
+        width: 39px;
+        height: 39px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #7c5cff, #b45cff);
+        box-shadow: 0 8px 30px rgba(124,92,255,.35);
+        font-size: 20px;
+    }
+
+    .logo strong {
+        font-size: 16px;
+        letter-spacing: -.3px;
+    }
+
+    .logo span {
+        display: block;
+        font-size: 10px;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    .nav-title {
+        color: #596477;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        padding: 0 12px;
+        margin: 16px 0 8px;
+        text-transform: uppercase;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 11px 12px;
+        margin-bottom: 4px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: #9ba5b5;
+        text-align: left;
+        transition: .2s;
+    }
+
+    .nav-item:hover {
+        background: rgba(255,255,255,.04);
+        color: white;
+    }
+
+    .nav-item.active {
+        background: linear-gradient(90deg, rgba(124,92,255,.18), rgba(124,92,255,.06));
+        color: white;
+        box-shadow: inset 2px 0 var(--primary);
+    }
+
+    .nav-icon {
+        width: 20px;
+        text-align: center;
+        font-size: 16px;
+    }
+
+    .nav-badge {
+        margin-left: auto;
+        font-size: 10px;
+        background: rgba(124,92,255,.15);
+        color: #ae9bff;
+        padding: 3px 7px;
+        border-radius: 20px;
+    }
+
+    .sidebar-bottom {
+        position: absolute;
+        bottom: 18px;
+        left: 14px;
+        right: 14px;
+    }
+
+    .storage-card {
+        background: linear-gradient(145deg, #121a29, #0e1521);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 12px;
+    }
+
+    .storage-top {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        margin-bottom: 9px;
+    }
+
+    .storage-top span {
+        color: var(--muted);
+    }
+
+    .progress {
+        height: 5px;
+        border-radius: 20px;
+        background: #202838;
+        overflow: hidden;
+    }
+
+    .progress div {
+        height: 100%;
+        width: 64%;
+        background: linear-gradient(90deg, var(--primary), #b36cff);
+        border-radius: inherit;
+    }
+
+    .profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-top: 1px solid var(--border);
+    }
+
+    .avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ff9b54, #ff5e9b);
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .profile-info {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .profile-info strong {
+        display: block;
+        font-size: 12px;
+    }
+
+    .profile-info span {
+        color: var(--muted);
+        font-size: 10px;
+    }
+
+    /* =========================
+       MAIN
+    ========================= */
+
+    .main {
+        margin-left: 255px;
+        width: calc(100% - 255px);
+        min-width: 0;
+    }
+
+    .topbar {
+        height: 72px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 30px;
+        background: rgba(7,11,20,.72);
+        backdrop-filter: blur(20px);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+
+    .page-title h1 {
+        font-size: 20px;
+        letter-spacing: -.5px;
+    }
+
+    .page-title p {
+        color: var(--muted);
+        font-size: 11px;
+        margin-top: 3px;
+    }
+
+    .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+
+    .icon-btn {
+        width: 37px;
+        height: 37px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #0d141f;
+        color: #b4bdcb;
+        display: grid;
+        place-items: center;
+        position: relative;
+    }
+
+    .notification-dot {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--danger);
+        top: 7px;
+        right: 7px;
+    }
+
+    .primary-btn {
+        border: 0;
+        color: white;
+        background: linear-gradient(135deg, var(--primary), #9c63ff);
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 12px;
+        box-shadow: 0 8px 25px rgba(124,92,255,.24);
+        transition: .2s;
+    }
+
+    .primary-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 30px rgba(124,92,255,.32);
+    }
+
+    .content {
+        padding: 28px 30px 45px;
+        max-width: 1600px;
+        margin: auto;
+    }
+
+    /* =========================
+       WELCOME
+    ========================= */
+
+    .welcome {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 25px;
+    }
+
+    .welcome h2 {
+        font-size: 25px;
+        letter-spacing: -.8px;
+    }
+
+    .welcome p {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .date-chip {
+        border: 1px solid var(--border);
+        background: var(--card);
+        padding: 9px 13px;
+        border-radius: 9px;
+        color: #9ca6b7;
+        font-size: 11px;
+    }
+
+    /* =========================
+       STAT CARDS
+    ========================= */
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: linear-gradient(145deg, rgba(17,24,36,.95), rgba(13,19,29,.95));
+        border: 1px solid var(--border);
+        border-radius: 15px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::after {
+        content: "";
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--primary);
+        opacity: .06;
+        right: -25px;
+        top: -25px;
+    }
+
+    .stat-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .stat-label {
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+    .stat-icon {
+        width: 31px;
+        height: 31px;
+        display: grid;
+        place-items: center;
+        border-radius: 9px;
+        background: rgba(124,92,255,.12);
+        color: #a18bff;
+    }
+
+    .stat-number {
+        font-size: 27px;
+        font-weight: 800;
+        margin: 13px 0 5px;
+        letter-spacing: -1px;
+    }
+
+    .stat-footer {
+        font-size: 10px;
+        color: var(--muted);
+    }
+
+    .up {
+        color: var(--success);
+        font-weight: 700;
+    }
+
+    /* =========================
+       GRID
+    ========================= */
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(280px, .8fr);
+        gap: 18px;
+        margin-bottom: 20px;
+    }
+
+    .card {
+        background: rgba(15,22,33,.9);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 17px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-header h3 {
+        font-size: 13px;
+    }
+
+    .card-header p {
+        color: var(--muted);
+        font-size: 10px;
+        margin-top: 3px;
+    }
+
+    .card-body {
+        padding: 18px;
+    }
+
+    .view-all {
+        border: 0;
+        background: transparent;
+        color: #9d89ff;
+        font-size: 10px;
+    }
+
+    /* =========================
+       UPLOAD
+    ========================= */
+
+    .upload-zone {
+        border: 1px dashed #39465c;
+        border-radius: 13px;
+        min-height: 215px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background:
+            radial-gradient(circle at center, rgba(124,92,255,.08), transparent 55%),
+            #0c131f;
+        transition: .2s;
+    }
+
+    .upload-zone.dragover {
+        border-color: var(--primary);
+        background: rgba(124,92,255,.09);
+    }
+
+    .upload-icon {
+        width: 54px;
+        height: 54px;
+        display: grid;
+        place-items: center;
+        border-radius: 15px;
+        background: rgba(124,92,255,.13);
+        color: #ad9aff;
+        font-size: 24px;
+        margin-bottom: 13px;
+    }
+
+    .upload-zone h4 {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .upload-zone p {
+        color: var(--muted);
+        font-size: 10px;
+        max-width: 320px;
+        line-height: 1.5;
+    }
+
+    .upload-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 15px;
+    }
+
+    .secondary-btn {
+        border: 1px solid var(--border);
+        background: #151e2c;
+        color: #c4ccda;
+        padding: 9px 13px;
+        border-radius: 9px;
+        font-size: 11px;
+    }
+
+    .url-input {
+        display: none;
+        width: 100%;
+        margin-top: 13px;
+    }
+
+    .url-input input {
+        width: 100%;
+        padding: 11px 12px;
+        background: #0a111c;
+        border: 1px solid var(--border);
+        color: white;
+        border-radius: 9px;
+        outline: none;
+        font-size: 11px;
+    }
+
+    .url-input input:focus {
+        border-color: var(--primary);
+    }
+
+    /* =========================
+       QUICK PROCESS
+    ========================= */
+
+    .process-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .process-item {
+        padding: 13px;
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        background: #0d1521;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+    }
+
+    .process-icon {
+        width: 37px;
+        height: 37px;
+        display: grid;
+        place-items: center;
+        border-radius: 9px;
+        background: rgba(77,159,255,.11);
+        color: #70b4ff;
+    }
+
+    .process-info {
+        flex: 1;
+    }
+
+    .process-info strong {
+        display: block;
+        font-size: 11px;
+    }
+
+    .process-info span {
+        display: block;
+        color: var(--muted);
+        font-size: 9px;
+        margin-top: 3px;
+    }
+
+    .status {
+        font-size: 9px;
+        padding: 4px 7px;
+        border-radius: 20px;
+    }
+
+    .status.processing {
+        background: rgba(255,184,77,.10);
+        color: var(--warning);
+    }
+
+    .status.done {
+        background: rgba(49,214,139,.10);
+        color: var(--success);
+    }
+
+    /* =========================
+       PLATFORMS
+    ========================= */
+
+    .platforms {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
+    .platform {
+        padding: 14px;
+        background: #0d1520;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .platform:hover {
+        border-color: #4b5a72;
+        transform: translateY(-1px);
+    }
+
+    .platform.selected {
+        border-color: rgba(124,92,255,.65);
+        background: rgba(124,92,255,.08);
+    }
+
+    .platform-icon {
+        width: 38px;
+        height: 38px;
+        margin: auto;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        background: #172131;
+        font-weight: 800;
+    }
+
+    .platform strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 10px;
+    }
+
+    .platform small {
+        color: var(--muted);
+        font-size: 8px;
+    }
+
+    /* =========================
+       TABLE
+    ========================= */
+
+    .table-wrap {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        text-align: left;
+        color: #697487;
+        font-size: 9px;
+        font-weight: 700;
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--border);
+        text-transform: uppercase;
+        letter-spacing: .6px;
+    }
+
+    td {
+        padding: 13px 15px;
+        border-bottom: 1px solid rgba(255,255,255,.045);
+        font-size: 10px;
+        color: #bdc5d2;
+    }
+
+    tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .video-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 200px;
+    }
+
+    .thumb {
+        width: 50px;
+        height: 33px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #252f42, #101722);
+        display: grid;
+        place-items: center;
+        color: #9b8aff;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+
+    .video-cell strong {
+        display: block;
+        font-size: 10px;
+        color: #e3e7ed;
+        max-width: 230px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .video-cell span {
+        color: var(--muted);
+        font-size: 8px;
+        display: block;
+        margin-top: 3px;
+    }
+
+    .mini-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 8px;
+        border-radius: 20px;
+        font-size: 8px;
+    }
+
+    .mini-status::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .mini-status.completed {
+        color: var(--success);
+        background: rgba(49,214,139,.08);
+    }
+
+    .mini-status.running {
+        color: var(--warning);
+        background: rgba(255,184,77,.08);
+    }
+
+    .mini-status.scheduled {
+        color: var(--blue);
+        background: rgba(77,159,255,.08);
+    }
+
+    .more-btn {
+        border: 0;
+        background: transparent;
+        color: #7f8a9c;
+        font-size: 16px;
+    }
+
+    /* =========================
+       CLIPS
+    ========================= */
+
+    .clips {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 11px;
+    }
+
+    .clip {
+        aspect-ratio: 9/13;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+        background: linear-gradient(145deg, #252f42, #101722);
+        border: 1px solid var(--border);
+    }
+
+    .clip-bg {
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 60% 30%, rgba(124,92,255,.5), transparent 28%),
+            linear-gradient(145deg, #202b3c, #0b111b);
+    }
+
+    .clip:nth-child(2) .clip-bg {
+        background:
+            radial-gradient(circle at 35% 60%, rgba(255,96,160,.35), transparent 30%),
+            linear-gradient(145deg, #2b2030, #0b111b);
+    }
+
+    .clip:nth-child(3) .clip-bg {
+        background:
+            radial-gradient(circle at 65% 40%, rgba(45,200,170,.3), transparent 30%),
+            linear-gradient(145deg, #182b2b, #0b111b);
+    }
+
+    .clip:nth-child(4) .clip-bg {
+        background:
+            radial-gradient(circle at 40% 30%, rgba(255,184,77,.32), transparent 30%),
+            linear-gradient(145deg, #302719, #0b111b);
+    }
+
+    .clip:nth-child(5) .clip-bg {
+        background:
+            radial-gradient(circle at 55% 45%, rgba(77,159,255,.35), transparent 30%),
+            linear-gradient(145deg, #192638, #0b111b);
+    }
+
+    .clip-overlay {
+        position: absolute;
+        inset: auto 0 0;
+        padding: 30px 9px 9px;
+        background: linear-gradient(transparent, rgba(0,0,0,.9));
+    }
+
+    .clip-overlay strong {
+        display: block;
+        font-size: 9px;
+    }
+
+    .clip-overlay span {
+        display: block;
+        color: #9fa8b7;
+        font-size: 8px;
+        margin-top: 3px;
+    }
+
+    .clip-play {
+        position: absolute;
+        top: 9px;
+        left: 9px;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        background: rgba(0,0,0,.55);
+        border: 1px solid rgba(255,255,255,.18);
+        display: grid;
+        place-items: center;
+        font-size: 9px;
+    }
+
+    .clip-tag {
+        position: absolute;
+        top: 9px;
+        right: 9px;
+        background: rgba(0,0,0,.45);
+        backdrop-filter: blur(5px);
+        border-radius: 5px;
+        padding: 3px 5px;
+        font-size: 7px;
+    }
+
+    /* =========================
+       MODAL
+    ========================= */
+
+    .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.68);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        padding: 20px;
+    }
+
+    .modal.show {
+        display: flex;
+    }
+
+    .modal-box {
+        width: 100%;
+        max-width: 650px;
+        background: #101722;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 30px 100px rgba(0,0,0,.5);
+        overflow: hidden;
+        animation: modalIn .22s ease;
+    }
+
+    @keyframes modalIn {
+        from {
+            transform: translateY(15px) scale(.98);
+            opacity: 0;
+        }
+        to {
+            transform: none;
+            opacity: 1;
+        }
+    }
+
+    .modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .modal-head h3 {
+        font-size: 14px;
+    }
+
+    .close {
+        border: 0;
+        background: transparent;
+        color: #8e99aa;
+        font-size: 20px;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 13px;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .field.full {
+        grid-column: 1 / -1;
+    }
+
+    .field label {
+        font-size: 10px;
+        color: #8d97a8;
+    }
+
+    .field input,
+    .field select {
+        width: 100%;
+        border: 1px solid var(--border);
+        background: #0b121d;
+        color: #e9edf3;
+        border-radius: 9px;
+        padding: 10px;
+        outline: none;
+        font-size: 11px;
+    }
+
+    .field input:focus,
+    .field select:focus {
+        border-color: var(--primary);
+    }
+
+    .modal-footer {
+        padding: 15px 20px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    /* =========================
+       TOAST
+    ========================= */
+
+    .toast {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        background: #161f2d;
+        border: 1px solid var(--border);
+        padding: 13px 15px;
+        border-radius: 11px;
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        transform: translateY(100px);
+        opacity: 0;
+        transition: .3s;
+        z-index: 2000;
+        font-size: 11px;
+    }
+
+    .toast.show {
+        transform: none;
+        opacity: 1;
+    }
+
+    .toast-icon {
+        color: var(--success);
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    .mobile-menu {
+        display: none;
+    }
+
+    @media (max-width: 1100px) {
+        .stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .clips {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    @media (max-width: 800px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .main {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .mobile-menu {
+            display: grid;
+        }
+
+        .topbar {
+            padding: 0 16px;
+        }
+
+        .content {
+            padding: 20px 16px 35px;
+        }
+
+        .welcome {
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .date-chip {
+            display: none;
+        }
+
+        .platforms {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .clips {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .field.full {
+            grid-column: auto;
+        }
+    }
+
+    @media (max-width: 500px) {
+        .stats {
+            grid-template-columns: 1fr;
+        }
+
+        .stats .stat-number {
+            font-size: 23px;
+        }
+
+        .clips {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .top-actions .primary-btn {
+            display: none;
+        }
+
+        .welcome h2 {
+            font-size: 21px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="logo">
+            <div class="logo-icon">✦</div>
+            <div>
+                <strong>RepurposeAI</strong>
+                <span>Video Intelligence</span>
+            </div>
+        </div>
+
+        <div class="nav-title">Workspace</div>
+
+        <button class="nav-item active" onclick="setActive(this)">
+            <span class="nav-icon">⌂</span>
+            Dashboard
+        </button>
+
+        <button class="nav-item" onclick="setActive(this)">
+            <span class="nav-icon">▣</span>
+            My Videos
+            <span class="nav-badge">24</span>
+        </button>
+
+        <button class="nav-item" onclick="setActive(this)">
+            <span class="nav-icon">✂</span>
+            Clips
+        </button>
+
+        <button class="nav-item" onclick="setActive(this)">
+            <span class="nav-icon">◷</span>
+            Schedule
+            <span class="nav-badge">8</span>
+        </button>
+
+        <div class="nav-title">Publish</div>
+
+        <button class="nav-item" onclick="setActive(this)">
+            <span class="nav-icon">▶</span>
+            YouTube
+        </button>
+
+        <button class="nav-item" onclick="setActive(this)">
+            <span class="nav-icon">◎</span>
+            Instagram
+        </button>
+
+        <button class="nav-item" onclick="setActive(this)">
+            <span class="nav-icon">f</span>
+            Facebook
+        </button>
+
+        <button class="nav-item" onclick="setActive(this)">
+            <span class="nav-icon">𝕏</span>
+            X / Twitter
+        </button>
+
+        <div class="nav-title">Settings</div>
+
+        <button class="nav-item" onclick="setActive(this)">
+            <span class="nav-icon">⚙</span>
+            Settings
+        </button>
+
+        <button class="nav-item" onclick="showToast('Help center opened')">
+            <span class="nav-icon">?</span>
+            Help & Support
+        </button>
+
+        <div class="sidebar-bottom">
+
+            <div class="storage-card">
+                <div class="storage-top">
+                    <strong>Storage</strong>
+                    <span>64%</span>
+                </div>
+
+                <div class="progress">
+                    <div></div>
+                </div>
+
+                <div style="font-size:9px;color:#687385;margin-top:7px;">
+                    6.4 GB of 10 GB used
+                </div>
+            </div>
+
+            <div class="profile">
+                <div class="avatar">AS</div>
+
+                <div class="profile-info">
+                    <strong>Ajay Saini</strong>
+                    <span>Pro Workspace</span>
+                </div>
+
+                <button class="more-btn">⋮</button>
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- =========================
+         MAIN
+    ========================== -->
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <div class="page-title">
+                <h1>Dashboard</h1>
+                <p>Manage, repurpose and publish your content.</p>
+            </div>
+
+            <div class="top-actions">
+
+                <button class="icon-btn mobile-menu" onclick="toggleSidebar()">
+                    ☰
+                </button>
+
+                <button class="icon-btn" onclick="showToast('No new notifications')">
+                    ♢
+                    <span class="notification-dot"></span>
+                </button>
+
+                <button class="icon-btn" onclick="showToast('Search is ready')">
+                    ⌕
+                </button>
+
+                <button class="primary-btn" onclick="openUploadModal()">
+                    + New Video
+                </button>
+
+            </div>
+
+        </header>
+
+        <section class="content">
+
+            <!-- WELCOME -->
+
+            <div class="welcome">
+
+                <div>
+                    <h2>Good morning, Ajay 👋</h2>
+                    <p>Here's what's happening with your content today.</p>
+                </div>
+
+                <div class="date-chip">
+                    September 30, 2026
+                </div>
+
+            </div>
+
+            <!-- STATS -->
+
+            <div class="stats">
+
+                <div class="stat-card">
+
+                    <div class="stat-head">
+                        <span class="stat-label">Total Videos</span>
+                        <div class="stat-icon">▶</div>
+                    </div>
+
+                    <div class="stat-number">128</div>
+
+                    <div class="stat-footer">
+                        <span class="up">+12.5%</span> from last month
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-head">
+                        <span class="stat-label">Generated Clips</span>
+                        <div class="stat-icon">✂</div>
+                    </div>
+
+                    <div class="stat-number">1,284</div>
+
+                    <div class="stat-footer">
+                        <span class="up">+18.2%</span> from last month
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-head">
+                        <span class="stat-label">Scheduled Posts</span>
+                        <div class="stat-icon">◷</div>
+                    </div>
+
+                    <div class="stat-number">46</div>
+
+                    <div class="stat-footer">
+                        <span class="up">+8.4%</span> this week
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-head">
+                        <span class="stat-label">Published</span>
+                        <div class="stat-icon">✓</div>
+                    </div>
+
+                    <div class="stat-number">892</div>
+
+                    <div class="stat-footer">
+                        <span class="up">+24.7%</span> this month
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- UPLOAD + PROCESSING -->
+
+            <div class="dashboard-grid">
+
+                <div class="card">
+
+                    <div class="card-header">
+
+                        <div>
+                            <h3>Start Repurposing</h3>
+                            <p>Upload a video or paste a YouTube URL.</p>
+                        </div>
+
+                        <span style="font-size:18px;color:#8e7cff;">✦</span>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="upload-zone" id="uploadZone">
+
+                            <div class="upload-icon">↑</div>
+
+                            <h4>Drop your video here</h4>
+
+                            <p>
+                                Upload MP4, MOV or AVI files up to 2GB.
+                                Our AI will automatically find the best moments.
+                            </p>
+
+                            <div class="upload-actions">
+
+                                <button
+                                    class="primary-btn"
+                                    onclick="fakeUpload()">
+                                    Choose Video
+                                </button>
+
+                                <button
+                                    class="secondary-btn"
+                                    onclick="toggleUrl()">
+                                    YouTube URL
+                                </button>
+
+                            </div>
+
+                            <div class="url-input" id="urlInput">
+
+                                <input
+                                    type="text"
+                                    id="youtubeUrl"
+                                    placeholder="https://youtube.com/watch?v=..."
+                                    onkeydown="handleUrl(event)"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-header">
+
+                        <div>
+                            <h3>Processing Queue</h3>
+                            <p>AI jobs currently running.</p>
+                        </div>
+
+                        <button class="view-all">View all</button>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="process-list">
+
+                            <div class="process-item">
+
+                                <div class="process-icon">✦</div>
+
+                                <div class="process-info">
+                                    <strong>Marketing Masterclass</strong>
+                                    <span>Generating clips • 72%</span>
+                                </div>
+
+                                <span class="status processing">
+                                    72%
+                                </span>
+
+                            </div>
+
+                            <div class="process-item">
+
+                                <div class="process-icon">✦</div>
+
+                                <div class="process-info">
+                                    <strong>Python Tutorial #12</strong>
+                                    <span>Analyzing video • 43%</span>
+                                </div>
+
+                                <span class="status processing">
+                                    43%
+                                </span>
+
+                            </div>
+
+                            <div class="process-item">
+
+                                <div class="process-icon">✓</div>
+
+                                <div class="process-info">
+                                    <strong>Digital Marketing 101</strong>
+                                    <span>12 clips generated</span>
+                                </div>
+
+                                <span class="status done">
+                                    Done
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PLATFORMS -->
+
+            <div class="card" style="margin-bottom:20px;">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Connected Platforms</h3>
+                        <p>Select platforms for your next publishing workflow.</p>
+                    </div>
+
+                    <button
+                        class="secondary-btn"
+                        onclick="showToast('Platform manager opened')">
+                        Manage
+                    </button>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="platforms">
+
+                        <div class="platform selected" onclick="togglePlatform(this)">
+                            <div class="platform-icon">▶</div>
+                            <strong>YouTube</strong>
+                            <small>Connected</small>
+                        </div>
+
+                        <div class="platform selected" onclick="togglePlatform(this)">
+                            <div class="platform-icon">◎</div>
+                            <strong>Instagram</strong>
+                            <small>Connected</small>
+                        </div>
+
+                        <div class="platform selected" onclick="togglePlatform(this)">
+                            <div class="platform-icon">f</div>
+                            <strong>Facebook</strong>
+                            <small>Connected</small>
+                        </div>
+
+                        <div class="platform" onclick="togglePlatform(this)">
+                            <div class="platform-icon">𝕏</div>
+                            <strong>X / Twitter</strong>
+                            <small>Connect</small>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- RECENT VIDEOS -->
+
+            <div class="card" style="margin-bottom:20px;">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Recent Videos</h3>
+                        <p>Your latest video processing activity.</p>
+                    </div>
+
+                    <button class="view-all">
+                        View all videos →
+                    </button>
+
+                </div>
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Video</th>
+                                <th>Clips</th>
+                                <th>Platforms</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+
+                                <td>
+                                    <div class="video-cell">
+
+                                        <div class="thumb">▶</div>
+
+                                        <div>
+                                            <strong>
+                                                Complete Digital Marketing Course 2026
+                                            </strong>
+                                            <span>01:24:36 • AI Repurpose</span>
+                                        </div>
+
+                                    </div>
+                                </td>
+
+                                <td>24 clips</td>
+
+                                <td>YouTube · IG · FB</td>
+
+                                <td>
+                                    <span class="mini-status completed">
+                                        Completed
+                                    </span>
+                                </td>
+
+                                <td>Today, 08:12 AM</td>
+
+                                <td>
+                                    <button class="more-btn">⋮</button>
+                                </td>
+
+                            </tr>
+
+                            <tr>
+
+                                <td>
+                                    <div class="video-cell">
+
+                                        <div class="thumb">▶</div>
+
+                                        <div>
+                                            <strong>
+                                                Python Full Course For Beginners
+                                            </strong>
+                                            <span>02:18:42 • AI Repurpose</span>
+                                        </div>
+
+                                    </div>
+                                </td>
+
+                                <td>38 clips</td>
+
+                                <td>YouTube · IG</td>
+
+                                <td>
+                                    <span class="mini-status running">
+                                        Processing
+                                    </span>
+                                </td>
+
+                                <td>Today, 07:42 AM</td>
+
+                                <td>
+                                    <button class="more-btn">⋮</button>
+                                </td>
+
+                            </tr>
+
+                            <tr>
+
+                                <td>
+                                    <div class="video-cell">
+
+                                        <div class="thumb">▶</div>
+
+                                        <div>
+                                            <strong>
+                                                SEO Masterclass — Day 1
+                                            </strong>
+                                            <span>00:54:12 • AI Repurpose</span>
+                                        </div>
+
+                                    </div>
+                                </td>
+
+                                <td>15 clips</td>
+
+                                <td>IG · FB</td>
+
+                                <td>
+                                    <span class="mini-status scheduled">
+                                        Scheduled
+                                    </span>
+                                </td>
+
+                                <td>Yesterday</td>
+
+                                <td>
+                                    <button class="more-btn">⋮</button>
+                                </td>
+
+                            </tr>
+
+                            <tr>
+
+                                <td>
+                                    <div class="video-cell">
+
+                                        <div class="thumb">▶</div>
+
+                                        <div>
+                                            <strong>
+                                                How To Start Freelancing
+                                            </strong>
+                                            <span>00:38:21 • AI Repurpose</span>
+                                        </div>
+
+                                    </div>
+                                </td>
+
+                                <td>11 clips</td>
+
+                                <td>YouTube · X</td>
+
+                                <td>
+                                    <span class="mini-status completed">
+                                        Completed
+                                    </span>
+                                </td>
+
+                                <td>Sep 28</td>
+
+                                <td>
+                                    <button class="more-btn">⋮</button>
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+            <!-- GENERATED CLIPS -->
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Recently Generated Clips</h3>
+                        <p>Your latest AI-selected short-form content.</p>
+                    </div>
+
+                    <button class="view-all">
+                        View all clips →
+                    </button>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="clips">
+
+                        <div class="clip">
+
+                            <div class="clip-bg"></div>
+
+                            <div class="clip-play">▶</div>
+
+                            <div class="clip-tag">9:16</div>
+
+                            <div class="clip-overlay">
+                                <strong>3 Marketing Secrets</strong>
+                                <span>00:42 • Viral Score 94</span>
+                            </div>
+
+                        </div>
+
+                        <div class="clip">
+
+                            <div class="clip-bg"></div>
+
+                            <div class="clip-play">▶</div>
+
+                            <div class="clip-tag">9:16</div>
+
+                            <div class="clip-overlay">
+                                <strong>Don't Make This Mistake</strong>
+                                <span>00:38 • Viral Score 91</span>
+                            </div>
+
+                        </div>
+
+                        <div class="clip">
+
+                            <div class="clip-bg"></div>
+
+                            <div class="clip-play">▶</div>
+
+                            <div class="clip-tag">9:16</div>
+
+                            <div class="clip-overlay">
+                                <strong>Learn Python Faster</strong>
+                                <span>00:51 • Viral Score 89</span>
+                            </div>
+
+                        </div>
+
+                        <div class="clip">
+
+                            <div class="clip-bg"></div>
+
+                            <div class="clip-play">▶</div>
+
+                            <div class="clip-tag">9:16</div>
+
+                            <div class="clip-overlay">
+                                <strong>SEO Growth Hack</strong>
+                                <span>00:34 • Viral Score 87</span>
+                            </div>
+
+                        </div>
+
+                        <div class="clip">
+
+                            <div class="clip-bg"></div>
+
+                            <div class="clip-play">▶</div>
+
+                            <div class="clip-tag">9:16</div>
+
+                            <div class="clip-overlay">
+                                <strong>Start Your Business</strong>
+                                <span>00:46 • Viral Score 85</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- =========================
+     UPLOAD MODAL
+========================== -->
+
+<div class="modal" id="uploadModal">
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <h3>Create New Video Project</h3>
+
+            <button class="close" onclick="closeUploadModal()">×</button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="form-grid">
+
+                <div class="field full">
+
+                    <label>Project Name</label>
+
+                    <input
+                        type="text"
+                        id="projectName"
+                        placeholder="e.g. Marketing Masterclass">
+
+                </div>
+
+                <div class="field full">
+
+                    <label>YouTube URL / Video File</label>
+
+                    <input
+                        type="text"
+                        placeholder="Paste YouTube URL or choose video">
+
+                </div>
+
+                <div class="field">
+
+                    <label>Processing Mode</label>
+
+                    <select>
+                        <option>Viral Mode — AI optimized</option>
+                        <option>Normal Mode</option>
+                    </select>
+
+                </div>
+
+                <div class="field">
+
+                    <label>Output Format</label>
+
+                    <select>
+                        <option>Vertical — 9:16</option>
+                        <option>Horizontal — 16:9</option>
+                        <option>Square — 1:1</option>
+                    </select>
+
+                </div>
+
+                <div class="field">
+
+                    <label>Target Clip Duration</label>
+
+                    <select>
+                        <option>30–60 seconds</option>
+                        <option>15–30 seconds</option>
+                        <option>60–90 seconds</option>
+                    </select>
+
+                </div>
+
+                <div class="field">
+
+                    <label>Language</label>
+
+                    <select>
+                        <option>English</option>
+                        <option>Hindi</option>
+                        <option>Hinglish</option>
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                class="secondary-btn"
+                onclick="closeUploadModal()">
+                Cancel
+            </button>
+
+            <button
+                class="primary-btn"
+                onclick="createProject()">
+                Start AI Processing
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- TOAST -->
+
+<div class="toast" id="toast">
+
+    <span class="toast-icon">✓</span>
+
+    <span id="toastMessage">
+        Done
+    </span>
+
+</div>
+
+
+<script>
+
+    /* =========================
+       SIDEBAR
+    ========================== */
+
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+    }
+
+
+    function setActive(element) {
+
+        document
+            .querySelectorAll(".nav-item")
+            .forEach(item => item.classList.remove("active"));
+
+        element.classList.add("active");
+
+        if (window.innerWidth <= 800) {
+            document
+                .getElementById("sidebar")
+                .classList.remove("open");
+        }
+
+        showToast(element.innerText.trim().split("\n")[0] + " selected");
+    }
+
+
+    /* =========================
+       UPLOAD
+    ========================== */
+
+    function fakeUpload() {
+
+        showToast("Video selected — demo upload started");
+
+        const zone = document.getElementById("uploadZone");
+
+        zone.innerHTML = `
+            <div class="upload-icon">✓</div>
+            <h4>Video uploaded successfully</h4>
+            <p>
+                AI analysis is ready to start.
+            </p>
+
+            <div style="width:80%;max-width:350px;margin-top:15px;">
+                <div class="progress">
+                    <div id="demoProgress" style="width:18%;"></div>
+                </div>
+
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    margin-top:7px;
+                    color:#7e899b;
+                    font-size:9px;
+                ">
+                    <span>Uploading...</span>
+                    <span id="progressText">18%</span>
+                </div>
+            </div>
+        `;
+
+        let progress = 18;
+
+        const timer = setInterval(() => {
+
+            progress += Math.floor(Math.random() * 15) + 5;
+
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(timer);
+
+                setTimeout(() => {
+
+                    zone.innerHTML = `
+                        <div class="upload-icon">✦</div>
+                        <h4>Ready for AI processing</h4>
+                        <p>
+                            Your video is ready. Start generating viral clips.
+                        </p>
+
+                        <button
+                            class="primary-btn"
+                            style="margin-top:15px;"
+                            onclick="startProcessing()">
+                            ✦ Generate AI Clips
+                        </button>
+                    `;
+
+                    showToast("Video upload completed");
+
+                }, 500);
+            }
+
+            const bar = document.getElementById("demoProgress");
+            const text = document.getElementById("progressText");
+
+            if (bar) bar.style.width = progress + "%";
+            if (text) text.innerText = progress + "%";
+
+        }, 500);
+    }
+
+
+    function startProcessing() {
+
+        showToast("AI clip generation started");
+
+        setTimeout(() => {
+            showToast("AI found 12 potential viral moments");
+        }, 1800);
+
+    }
+
+
+    /* =========================
+       YOUTUBE URL
+    ========================== */
+
+    function toggleUrl() {
+
+        const input = document.getElementById("urlInput");
+
+        input.style.display =
+            input.style.display === "block"
+                ? "none"
+                : "block";
+
+        if (input.style.display === "block") {
+            document.getElementById("youtubeUrl").focus();
+        }
+    }
+
+
+    function handleUrl(event) {
+
+        if (event.key !== "Enter") return;
+
+        const value = event.target.value.trim();
+
+        if (!value) {
+            showToast("Please enter a YouTube URL");
+            return;
+        }
+
+        showToast("YouTube URL added successfully");
+
+        event.target.value = "";
+
+    }
+
+
+    /* =========================
+       PLATFORMS
+    ========================== */
+
+    function togglePlatform(element) {
+
+        element.classList.toggle("selected");
+
+        const name =
+            element.querySelector("strong").innerText;
+
+        const selected =
+            element.classList.contains("selected");
+
+        showToast(
+            selected
+                ? name + " selected"
+                : name + " deselected"
+        );
+    }
+
+
+    /* =========================
+       MODAL
+    ========================== */
+
+    function openUploadModal() {
+
+        document
+            .getElementById("uploadModal")
+            .classList.add("show");
+
+        setTimeout(() => {
+            document
+                .getElementById("projectName")
+                .focus();
+        }, 100);
+
+    }
+
+
+    function closeUploadModal() {
+
+        document
+            .getElementById("uploadModal")
+            .classList.remove("show");
+
+    }
+
+
+    function createProject() {
+
+        const name =
+            document
+                .getElementById("projectName")
+                .value
+                .trim();
+
+        if (!name) {
+            showToast("Please enter a project name");
+            return;
+        }
+
+        closeUploadModal();
+
+        showToast(
+            "Project '" + name + "' created successfully"
+        );
+
+        document
+            .getElementById("projectName")
+            .value = "";
+
+    }
+
+
+    /* =========================
+       TOAST
+    ========================== */
+
+    let toastTimer;
+
+    function showToast(message) {
+
+        const toast =
+            document.getElementById("toast");
+
+        const text =
+            document.getElementById("toastMessage");
+
+        text.innerText = message;
+
+        toast.classList.add("show");
+
+        clearTimeout(toastTimer);
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2600);
+
+    }
+
+
+    /* =========================
+       DRAG & DROP
+    ========================== */
+
+    const uploadZone =
+        document.getElementById("uploadZone");
+
+
+    ["dragenter", "dragover"].forEach(eventName => {
+
+        uploadZone.addEventListener(eventName, event => {
+
+            event.preventDefault();
+
+            uploadZone.classList.add("dragover");
+
+        });
+
+    });
+
+
+    ["dragleave", "drop"].forEach(eventName => {
+
+        uploadZone.addEventListener(eventName, event => {
+
+            event.preventDefault();
+
+            uploadZone.classList.remove("dragover");
+
+        });
+
+    });
+
+
+    uploadZone.addEventListener("drop", event => {
+
+        const files = event.dataTransfer.files;
+
+        if (!files.length) return;
+
+        const file = files[0];
+
+        showToast(
+            file.name + " selected"
+        );
+
+    });
+
+
+    /* =========================
+       MODAL OUTSIDE CLICK
+    ========================== */
+
+    document
+        .getElementById("uploadModal")
+        .addEventListener("click", event => {
+
+            if (
+                event.target.id === "uploadModal"
+            ) {
+                closeUploadModal();
+            }
+
+        });
+
+
+    /* =========================
+       ESCAPE KEY
+    ========================== */
+
+    document.addEventListener("keydown", event => {
+
+        if (event.key === "Escape") {
+            closeUploadModal();
+        }
+
+    });
+
+
+</script>
+
+</body>
+</html>
+```
